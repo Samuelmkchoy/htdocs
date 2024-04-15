@@ -1,30 +1,40 @@
 <?php
-ini_set('session.use_only_cookies', 1);
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'domain' => '',
-    'secure' => true,
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-session_start();
+// Check if a session has already been started
+if (session_status() === PHP_SESSION_NONE) {
+    // Set session cookie parameters and start the session
+    ini_set('session.use_only_cookies', 1);
+    setcookie('my_cookie', 'my_value', [
+        'samesite' => 'Lax', 
+        'secure' => true, 
+        'httponly' => true, 
+        'path' => '/',
+        'domain' => 'yourdomain.com',
+        'expires' => time() + 3600 // Expires in 1 hour
+    ]);
+    session_start();
+}
 
-// Generate CSRF token only if it doesn't exist or on login
-if (empty($_SESSION['csrf_token'])) {
+header('X-Frame-Options: SAMEORIGIN');
+header("Content-Security-Policy: frame-ancestors 'self'");
+
+if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Session timeout and activity management
 if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
-    session_unset();
-    session_destroy();
+    // last request was more than 30 minutes ago
+    session_unset();     // unset $_SESSION variable for the run-time
+    session_destroy();   // destroy session data in storage
+    session_start();     // start a new session and regenerate CSRF token
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
-$_SESSION['LAST_ACTIVITY'] = time();
+$_SESSION['LAST_ACTIVITY'] = time(); // update last activity time stamp
 
 header("Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none';");
-
 ?>
 
 <!DOCTYPE html>
@@ -64,9 +74,6 @@ function resetTimer() {
 </script>
 </head>
 <body>
-
-<Meta refresh for automatic logout should be used cautiously, consider removing it if using JavaScript-based timeout -- />
-<meta http-equiv="refresh" content="3600;url=includes/logout.inc.php" />
 
 
 

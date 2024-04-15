@@ -1,10 +1,9 @@
 <?php
-// Start the session if it has not already been started
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Include the database connection file
 require 'dbh.inc.php';
 
 header("Content-Security-Policy: default-src 'self'; script-src 'self';");
@@ -81,8 +80,16 @@ if (isset($_POST['submit'])) {
     $stmt->bind_param("ss", $uid, $hashedPwd);
 
     if ($stmt->execute()) {
+        // Fetch the user ID of the newly registered user
+        $new_user_id = $conn->insert_id;
+    
+        // Set necessary session variables
+        $_SESSION['u_id'] = $new_user_id;
+        $_SESSION['u_uid'] = $uid;
+        $_SESSION['u_admin'] = 0;  // assuming default admin status is 0
+    
         $_SESSION['registerSuccess'] = "You've successfully registered.";
-        header("Location: ../auth2.php");
+        header("Location: ../auth1.php");
         exit();
     } else {
         $_SESSION['registerError'] = "An unexpected error occurred. Please try again.";

@@ -1,4 +1,11 @@
 <?php
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+session_start();
+
       include_once 'header.php';
 ?>
         <section class="main-container">
@@ -91,44 +98,55 @@
 
         $conn = null; // Close the database connection
     }
-	
-										
-					//Message if login fails 
-					echo "<br>";
-					if (isset($_SESSION['failedMsg']))
-					{
-						echo $htmlspecialchars['failedMsg'];
-						unset($_SESSION['failedMsg']);
+				
+					// Message if login fails 
+                    if (isset($_SESSION['failedMsg'])) {
+                        echo htmlspecialchars($_SESSION['failedMsg']);
+                        unset($_SESSION['failedMsg']);
 					}
 
-					//Message if locked out 
-					if(isset($_SESSION['lockedOut'])) {
-						echo $htmlspecialchars['lockedOut'];
-						unset($_SESSION['lockedOut']);
-					}
+					// Message if locked out and display the countdown timer
+                    if (isset($_SESSION['lockedOut']) && isset($_SESSION['timeLeft']) && $_SESSION['timeLeft'] > 0) {
+                        echo htmlspecialchars($_SESSION['lockedOut']);
+                        ?>
+                        <div id="timer">You are locked out. Please wait <span id="time"><?php echo $_SESSION['timeLeft']; ?></span> seconds.</div>
+                        <script>
+                            var timeLeft = <?php echo $_SESSION['timeLeft']; ?>;
+                            var timerElement = document.getElementById('time');
 
-					//Remaining seconds for current lockout
-					if(isset($_SESSION['timeLeft'])) {
-						echo " (" . $htmlspecialchars['timeLeft'] . " seconds remaining).";
-						unset($_SESSION['timeLeft']);
-					}
+                            var timer = setInterval(function() {
+                                timeLeft--;
+                                timerElement.textContent = timeLeft;
 
-					//Print messages re: registration
-					if(isset($_SESSION['register'])) {
-						echo $htmlspecialchars['register'];
-						unset($_SESSION['register']);
-					}
+                                if (timeLeft <= 0) {
+                                    clearInterval(timer);
+                                    window.location.reload(); // or redirect to login page
+                                }
+                            }, 1000);
+                        </script>
+                        <?php
+                        unset($_SESSION['lockedOut']);
+                        unset($_SESSION['timeLeft']);
+                    }
 
-					//Print messages re: changing password
-					if(isset($_SESSION['resetError'])) {
-						echo $htmlspecialchars['resetError'];
-						unset($_SESSION['resetError']);
-					}
+
+					// Print messages re: registration
+                    if (isset($_SESSION['register'])) {
+                        echo htmlspecialchars($_SESSION['register']);
+                        unset($_SESSION['register']);
+                    }
+
+					// Print messages re: changing password
+                    if (isset($_SESSION['resetError'])) {
+                        echo htmlspecialchars($_SESSION['resetError']);
+                        unset($_SESSION['resetError']);
+                    }
+      
                 ?>
 				
             </div>
         </section>
 
-<?php
-	include_once 'footer.php';
-?>
+        <?php
+        include_once 'footer.php';
+        ?>

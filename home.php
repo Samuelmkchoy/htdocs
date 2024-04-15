@@ -12,14 +12,9 @@ include_once 'header.php';
             if (!$conn) {
                 die('Could not connect: ' . htmlspecialchars(mysqli_connect_error()));
             } else {
-                // Fixed database name to prevent SQL Injection (assuming no user input is involved here)
-                $query = "CREATE DATABASE IF NOT EXISTS secureappdev";
-                if (mysqli_query($conn, $query)) {
-                    echo "Database created successfully or already exists";
-                } else {
-                    echo "Error creating database: " . htmlspecialchars(mysqli_error($conn));
+                mysqli_query($conn,"CREATE DATABASE secureappdev");
+                
                 }
-            }
 
             mysqli_close($conn);
         ?>
